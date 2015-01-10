@@ -1,4 +1,4 @@
-import bread as b
+from bread import bread as b
 
 def padded_hex(pad_count):
     return lambda x: ("0x%%0%dx" % (pad_count)) % (x)
