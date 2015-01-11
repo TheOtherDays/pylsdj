@@ -81,7 +81,7 @@ class SAVFile(object):
         try:
             self.header_block = bread.parse(
                 header_block_data, bread_spec.compressed_sav_file)
-        except bitstring.ReadError, e:
+        except bitstring.ReadError as e:
             raise exceptions.ImportException(e)
 
         if self.header_block.sram_init_check != b'jk':
