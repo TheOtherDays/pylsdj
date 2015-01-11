@@ -1,10 +1,10 @@
 import bread_spec
-import bread
+from bread import bread
 import os
 import sys
 from struct import unpack
 import utils
-from StringIO import StringIO
+import io
 from project import Project
 import blockutils
 from blockutils import BlockReader, BlockWriter, BlockFactory
@@ -80,7 +80,7 @@ class SAVFile(object):
         self.header_block = bread.parse(
             header_block_data, bread_spec.compressed_sav_file)
 
-        if self.header_block.sram_init_check != 'jk':
+        if self.header_block.sram_init_check != b'jk':
             error_msg = (
                 "SRAM init check bits incorrect (should be 'jk', was '%s')" %
                 (self.header_block.sram_init_check))
@@ -150,7 +150,7 @@ class SAVFile(object):
 
             current_step += 1
 
-        for i in xrange(self.NUM_FILES):
+        for i in range(self.NUM_FILES):
             if i not in self.projects:
                 self.projects[i] = None
 
@@ -195,7 +195,7 @@ class SAVFile(object):
 
         block_table = []
 
-        for i in xrange(num_blocks):
+        for i in range(num_blocks):
             block_table.append(None)
 
         # First block is the header block, so we should ignore it when creating
@@ -259,12 +259,12 @@ class SAVFile(object):
         block_map = factory.blocks
 
         empty_block_data = []
-        for i in xrange(blockutils.BLOCK_SIZE):
+        for i in range(blockutils.BLOCK_SIZE):
             empty_block_data.append(0)
 
         callback("Writing data to file", current_step, total_steps, True)
         current_step += 1
-        for i in xrange(num_blocks):
+        for i in range(num_blocks):
             if i in block_map:
                 data_list = block_map[i].data
             else:

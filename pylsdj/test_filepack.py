@@ -14,7 +14,7 @@ import bread_spec as bread_spec
 import bread as b
 
 def test_basic_compress_decompress():
-    data = [i % 10 for i in xrange(5000)]
+    data = [i % 10 for i in range(5000)]
 
     compressed = filepack.compress(data)
 
@@ -23,8 +23,8 @@ def test_basic_compress_decompress():
     assert_list_equal(data, decompressed)
 
 def test_rle_compress():
-    data = [0xde for i in xrange(350)]
-    data.extend([0xfe for i in xrange(220)])
+    data = [0xde for i in range(350)]
+    data.extend([0xfe for i in range(220)])
     data.append(42)
     data.append(17)
 
@@ -77,7 +77,7 @@ def test_rle_special_byte():
 def test_default_instr_compress():
     data = []
 
-    for i in xrange(42):
+    for i in range(42):
         data.extend(filepack.DEFAULT_INSTRUMENT)
 
     reference = []
@@ -128,7 +128,7 @@ def test_instrument_sizes():
 def test_default_wave_compress():
     data = []
 
-    for i in xrange(33):
+    for i in range(33):
         data.extend(filepack.DEFAULT_WAVE)
 
     compressed = filepack.compress(data)
@@ -146,7 +146,7 @@ def test_default_wave_compress():
 def test_large_rle_compress():
     data = []
 
-    for i in xrange(275):
+    for i in range(275):
         data.append(42)
 
     compressed = filepack.compress(data)

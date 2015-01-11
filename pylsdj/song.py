@@ -9,7 +9,7 @@ from chain import Chain
 from speech_instrument import SpeechInstrument
 from instrument import Instrument
 
-import StringIO
+import io
 
 # Number of channels
 NUM_CHANNELS = 4
@@ -20,7 +20,7 @@ class AllocTable(object):
 
         self.access_objects = []
 
-        for index in xrange(len(alloc_table)):
+        for index in range(len(alloc_table)):
             self.access_objects.append(object_class(song, index))
 
     def __getitem__(self, index):
@@ -39,7 +39,7 @@ class AllocTable(object):
 
     def as_list(self):
         l = []
-        for i in xrange(len(self.alloc_table)):
+        for i in range(len(self.alloc_table)):
             if not self.alloc_table[i]:
                 l.append(None)
             else:
@@ -66,7 +66,7 @@ class Instruments(object):
         self.alloc_table = song.song_data.instr_alloc_table
         self.access_objects = []
 
-        for index in xrange(len(self.alloc_table)):
+        for index in range(len(self.alloc_table)):
             self.access_objects.append(Instrument(song, index))
 
     def set_instrument_type(self, index, instrument_type):
@@ -189,7 +189,7 @@ class Synths(object):
         self.song = song
         self.access_objects = []
 
-        for index in xrange(bread_spec.NUM_SYNTHS):
+        for index in range(bread_spec.NUM_SYNTHS):
             self.access_objects.append(Synth(self.song, index))
 
     def __getitem__(self, index):
@@ -206,9 +206,9 @@ class Song(object):
     """
     def __init__(self, song_data):
         # Check checksums
-        assert song_data.mem_init_flag_1 == 'rb'
-        assert song_data.mem_init_flag_2 == 'rb'
-        assert song_data.mem_init_flag_3 == 'rb'
+        assert song_data.mem_init_flag_1 == b'rb'
+        assert song_data.mem_init_flag_2 == b'rb'
+        assert song_data.mem_init_flag_3 == b'rb'
 
         # Everything we do to the song or any of its components should update
         # the song data object, so that we can rely on bread's writer to write

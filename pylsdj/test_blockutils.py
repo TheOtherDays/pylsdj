@@ -8,7 +8,7 @@ sys.path.append(os.path.join(SCRIPT_DIR, os.path.pardir))
 import blockutils as bl
 
 def test_simple_read_write():
-    data = [i % 10 for i in xrange(bl.BLOCK_SIZE * 5 + 17)]
+    data = [i % 10 for i in range(bl.BLOCK_SIZE * 5 + 17)]
 
     reader = bl.BlockReader()
     writer = bl.BlockWriter()

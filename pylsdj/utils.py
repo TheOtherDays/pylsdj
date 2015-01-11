@@ -65,7 +65,7 @@ def name_without_zeroes(name):
     """
     Return a human-readable name without LSDJ's trailing zeroes.
     """
-    first_zero = name.find('\0')
+    first_zero = name.find(b'\0')
 
     if first_zero == -1:
         return name

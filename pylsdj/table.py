@@ -35,9 +35,9 @@ class Table(object):
         self._index = index
 
         self._fx1 = [TableFX(self._song.song_data.table_cmd1, self._index, i)
-                     for i in xrange(STEPS_PER_TABLE)]
+                     for i in range(STEPS_PER_TABLE)]
         self._fx2 = [TableFX(self._song.song_data.table_cmd2, self._index, i)
-                     for i in xrange(STEPS_PER_TABLE)]
+                     for i in range(STEPS_PER_TABLE)]
 
     @property
     def song(self):
@@ -74,7 +74,7 @@ class Table(object):
     def export(self):
         export_struct = []
 
-        for i in xrange(STEPS_PER_TABLE):
+        for i in range(STEPS_PER_TABLE):
             export_struct.append({
                 "volume": self.envelopes[i],
                 "transpose": self.transposes[i],
