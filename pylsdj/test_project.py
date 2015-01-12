@@ -10,7 +10,7 @@ from project import Project, load_lsdsng, load_srm
 
 def test_save_load_lsdsng():
     sample_song_compressed = os.path.join(
-        SCRIPT_DIR, "test_data", "UNTOLDST.lsdsng")
+        SCRIPT_DIR, "test_data", b"UNTOLDST.lsdsng")
 
     proj = load_lsdsng(sample_song_compressed)
 
@@ -79,7 +79,7 @@ def test_block_remap_required():
 
     proj = load_lsdsng(block_remap_song)
 
-    assert_equal("ANNARKTE", proj.name)
+    assert_equal(b"ANNARKTE", proj.name)
     assert_equal(3, proj.version)
     assert_equal(4, proj.size_blks)
 
@@ -87,7 +87,7 @@ def test_srm_load():
     srm_song = os.path.join(SCRIPT_DIR, "test_data", "sample.srm")
 
     proj = load_srm(srm_song)
-    assert_equal("CLICK", proj.song.instruments[0].name)
+    assert_equal(b"CLICK", proj.song.instruments[0].name)
 
 def test_save_load_srm():
     srm_song = os.path.join(SCRIPT_DIR, "test_data", "sample.srm")

@@ -11,7 +11,7 @@ def assert_bytearray_equal(x, y):
 import filepack as filepack
 import blockutils as bl
 import bread_spec as bread_spec
-import bread as b
+from bread import bread as b
 
 def test_basic_compress_decompress():
     data = [i % 10 for i in range(5000)]

@@ -20,10 +20,10 @@ def teardown():
 
 @with_setup(setup, teardown)
 def test_project_save_load():
-    print "Loading..."
+    print("Loading...")
     sav = savfile.SAVFile(SAV_IN)
 
-    print "Saving..."
+    print("Saving...")
     sav.save(SAV_OUT)
 
     new_sav = savfile.SAVFile(SAV_OUT)
