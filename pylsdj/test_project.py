@@ -10,11 +10,11 @@ from project import Project, load_lsdsng, load_srm
 
 def test_save_load_lsdsng():
     sample_song_compressed = os.path.join(
-        SCRIPT_DIR, "test_data", b"UNTOLDST.lsdsng")
+        SCRIPT_DIR, "test_data", "UNTOLDST.lsdsng")
 
     proj = load_lsdsng(sample_song_compressed)
 
-    expected_song_name = "UNTOLDST"
+    expected_song_name = b"UNTOLDST"
     expected_song_version = 23
 
     assert_equal(proj.name, expected_song_name)

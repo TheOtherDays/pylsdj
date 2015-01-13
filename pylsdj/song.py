@@ -1,7 +1,7 @@
 import json
 
 from utils import assert_index_sane
-import bread
+from bread import bread
 import bread_spec
 
 from synth import Synth

@@ -6,7 +6,7 @@ SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(SCRIPT_DIR, os.path.pardir))
 
 def assert_bytearray_equal(x, y):
-    assert_list_equal(map(hex, x), map(hex, y))
+    assert_list_equal(list(map(hex, x)), list(map(hex, y)))
 
 import filepack as filepack
 import blockutils as bl
