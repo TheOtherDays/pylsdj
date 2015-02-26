@@ -1,8 +1,9 @@
-from instrument import Instrument
-from bread_spec import INSTRUMENT_TYPE_CODE
-from instrument_mixins import VibratoMixin
+from .instrument import Instrument
+from .instrument_mixins import VibratoMixin
+
 
 class KitInstrument(Instrument, VibratoMixin):
+
     def __init__(self, song, index):
         super(KitInstrument, self).__init__(song, index)
 
@@ -128,8 +129,17 @@ class KitInstrument(Instrument, VibratoMixin):
     def dist_type(self, value):
         self.data.dist_type = value
 
+    @property
+    def half_speed(self):
+        """if true, play samples at half their normal speed"""
+        return self.data.half_speed
+
+    @half_speed.setter
+    def half_speed(self, value):
+        self.data.half_speed = value
+
     def import_lsdinst(self, lsdinst_struct):
-        super(PulseInstrument, self).import_lsdinst(lsdinst_struct)
+        super(KitInstrument, self).import_lsdinst(lsdinst_struct)
 
         self.volume = lsdinst_struct['data']['volume']
 
@@ -148,4 +158,4 @@ class KitInstrument(Instrument, VibratoMixin):
         self.pitch = lsdinst_struct['data']['pitch']
         self.dist_type = lsdinst_struct['data']['dist_type']
 
-        VibratoMixin.import_lsdinst(lsdinst_struct)
+        VibratoMixin.import_lsdinst(self, lsdinst_struct)

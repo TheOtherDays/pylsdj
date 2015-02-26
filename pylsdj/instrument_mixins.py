@@ -1,6 +1,8 @@
-from vibrato import Vibrato
+from .vibrato import Vibrato
+
 
 class EnvelopeMixin(object):
+
     @property
     def envelope(self):
         """the noise instrument's volume envelope (8-bit integer)"""
@@ -14,7 +16,13 @@ class EnvelopeMixin(object):
     def import_lsdinst(obj, struct_data):
         obj.envelope = struct_data['data']['envelope']
 
+    @staticmethod
+    def equal(a, b):
+        return (isinstance(a, EnvelopeMixin) and isinstance(b, EnvelopeMixin)
+                and a.envelope == b.envelope)
+
 class VibratoMixin(object):
+
     @property
     def vibrato(self):
         """instrument's vibrato settings"""
@@ -24,8 +32,15 @@ class VibratoMixin(object):
     def import_lsdinst(obj, struct_data):
         Vibrato(obj.data.vibrato).import_lsdinst(struct_data)
 
+    @staticmethod
+    def equal(a, b):
+        return (isinstance(a, VibratoMixin) and isinstance(b, VibratoMixin)
+                and a.vibrato == b.vibrato)
+
+
 
 class SoundLengthMixin(object):
+
     @property
     def sound_length(self):
         """the instrument sound's length, a 6-bit integer or ``unlimited``
@@ -50,7 +65,14 @@ class SoundLengthMixin(object):
         else:
             obj.sound_length = 'unlimited'
 
+    @staticmethod
+    def equal(a, b):
+        return (isinstance(a, SoundLengthMixin)
+                and isinstance(b, SoundLengthMixin)
+                and a.sound_length == b.sound_length)
+
 class SweepMixin(object):
+
     @property
     def sweep(self):
         """modulates the sound's frequency; only works on pulse 1
@@ -64,3 +86,8 @@ class SweepMixin(object):
     @staticmethod
     def import_lsdinst(obj, struct_data):
         obj.sweep = struct_data['data']['sweep']
+
+    @staticmethod
+    def equal(a, b):
+        return (isinstance(a, SweepMixin) and isinstance(b, SweepMixin)
+                and a.sweep == b.sweep)

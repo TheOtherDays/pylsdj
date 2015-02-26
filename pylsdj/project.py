@@ -1,12 +1,11 @@
-import sys, math
-from bread import bread
-import bread_spec as spec
-from song import Song
-import io
-import utils
-import filepack
-import blockutils
-from blockutils import BlockReader, BlockWriter, BlockFactory
+import math
+import bread
+from . import bread_spec as spec
+from .song import Song
+from . import filepack
+from . import blockutils
+from .blockutils import BlockReader, BlockWriter, BlockFactory
+
 
 def load_lsdsng(filename):
     """Load a Project from a ``.lsdsng`` file.
@@ -38,7 +37,7 @@ def load_lsdsng(filename):
 
         remapped_blocks = filepack.renumber_block_keys(factory.blocks)
 
-        reader =  BlockReader()
+        reader = BlockReader()
         compressed_data = reader.read(remapped_blocks)
 
         # Now, decompress the raw data and use it and the preamble to construct
@@ -51,6 +50,7 @@ def load_lsdsng(filename):
             float(len(compressed_data)) / blockutils.BLOCK_SIZE))
 
         return Project(name, version, size_blks, raw_data)
+
 
 def load_srm(filename):
     """Load a Project from an ``.srm`` file.
@@ -81,7 +81,9 @@ def load_srm(filename):
 
     return Project(name, version, size_in_blocks, raw_data)
 
+
 class Project(object):
+
     def __init__(self, name, version, size_blks, data):
         self.name = name
         """the project's name"""
@@ -89,17 +91,41 @@ class Project(object):
         self.version = version
         """the project's version (incremented on every save in LSDJ)"""
 
-        self._song_data = bread.parse(data, spec.song)
-
-        self.song = Song(self._song_data)
-        """the song associated with the project"""
-
         self.size_blks = size_blks
         """the size of the song in filesystem blocks"""
 
         # Useful for applications tracking whether a project was modified since
         # it was loaded.
         self.modified = False
+
+        # Since parsing the song is expensive, we'll load it lazily from the
+        # raw data on-demand
+        self.__song_data = None
+        self._song = None
+        self._raw_bytes = data
+
+    @property
+    def _song_data(self):
+        if self.__song_data is None:
+            self.__song_data = bread.parse(self._raw_bytes, spec.song)
+
+        return self.__song_data
+
+    @_song_data.setter
+    def _song_data(self, value):
+        self.__song_data = value
+
+    @property
+    def song(self):
+        """the song associated with the project"""
+        if self._song is None:
+            self._song = Song(self._song_data)
+
+        return self._song
+
+    @song.setter
+    def song(self, value):
+        self._song = value
 
     def get_raw_data(self):
         return bread.write(self._song_data, spec.song)
@@ -115,7 +141,13 @@ class Project(object):
             writer = BlockWriter()
             factory = BlockFactory()
 
-            preamble_data = bread.write(self, spec.lsdsng_preamble)
+            preamble_dummy_bytes = bytearray([0] * 9)
+            preamble = bread.parse(
+                preamble_dummy_bytes, spec.lsdsng_preamble)
+            preamble.name = self.name
+            preamble.version = self.version
+
+            preamble_data = bread.write(preamble)
             raw_data = self.get_raw_data()
             compressed_data = filepack.compress(raw_data)
 
@@ -143,12 +175,13 @@ class Project(object):
             fp.write(raw_data)
 
     def __eq__(self, other):
-        return self._song_data == other._song_data
+        if other is None:
+            return False
+        else:
+            return self._song_data == other._song_data
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __str__(self):
-        out_str = StringIO.StringIO()
-        print >>out_str, "<%s, %d>" % (self.name, self.version)
-
-        string = out_str.getvalue()
-        out_str.close()
-        return string
+        return "<%s, %d>\n" % (self.name, self.version)

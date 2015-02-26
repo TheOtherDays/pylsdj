@@ -1,15 +1,27 @@
-from instrument import Instrument
-from bread_spec import INSTRUMENT_TYPE_CODE
-from instrument_mixins import EnvelopeMixin, SoundLengthMixin, VibratoMixin, \
+from .instrument import Instrument
+from .instrument_mixins import EnvelopeMixin, SoundLengthMixin, VibratoMixin, \
     SweepMixin
 
 MIXINS = [VibratoMixin, SoundLengthMixin, EnvelopeMixin, SweepMixin]
 
+
 class PulseInstrument(Instrument,
                       VibratoMixin, SoundLengthMixin, EnvelopeMixin,
                       SweepMixin):
+
     def __init__(self, song, index):
         super(PulseInstrument, self).__init__(song, index)
+
+    def __eq__(self, other):
+        return (super(PulseInstrument, self).__eq__(other) and
+                isinstance(other, PulseInstrument) and
+                self.phase_transpose == other.phase_transpose and
+                self.phase_finetune == other.phase_finetune and
+                self.wave == other.wave and
+                VibratoMixin.equal(self, other) and
+                SoundLengthMixin.equal(self, other) and
+                EnvelopeMixin.equal(self, other) and
+                SweepMixin.equal(self, other))
 
     @property
     def phase_transpose(self):
@@ -48,4 +60,4 @@ class PulseInstrument(Instrument,
         self.wave = struct_data['data']['wave']
 
         for mixin in MIXINS:
-            mixin.import_from_struct_data(self, struct_data)
+            mixin.import_lsdinst(self, struct_data)

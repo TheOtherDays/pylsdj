@@ -9,3 +9,5 @@ include/
 lib/
 man/
 .coverage
+cover/
+.tox

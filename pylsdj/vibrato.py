@@ -1,4 +1,5 @@
 class Vibrato(object):
+
     def __init__(self, data):
         self._data = data
 
@@ -24,3 +25,8 @@ class Vibrato(object):
     def import_lsdinst(self, struct_data):
         self.direction = struct_data['data']['vibrato']['direction']
         self.type = struct_data['data']['vibrato']['type']
+
+    def __eq__(self, other):
+        return (isinstance(other, Vibrato)
+                and self.type == other.type
+                and self.direction == other.direction)

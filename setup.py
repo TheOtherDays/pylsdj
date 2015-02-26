@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='pylsdj',
-      version='2.0.0',
+      version='2.3.3',
       description='A utility belt for dealing with LSDJ-related files',
       url='http://github.com/alexras/pylsdj',
       author='Alex Rasmussen',
@@ -15,9 +15,10 @@ setup(name='pylsdj',
           'Operating System :: OS Independent',
           'Programming Language :: Python',
           'Programming Language :: Python :: 2.7',
+          'Programming Language :: Python :: 3',
           'Topic :: Software Development :: Libraries :: Python Modules'],
       license='MIT',
-      packages=['pylsdj'],
+      packages=['pylsdj', 'pylsdj.vendor'],
       requires=['bread'],
-      install_requires=['bread'],
+      install_requires=['bread>=2.1.0'],
       zip_safe=False)

@@ -1,34 +1,47 @@
-from utils import assert_index_sane
+from .utils import assert_index_sane
 import json
-import abc
-
-import bread
-
-from filepack import DEFAULT_INSTRUMENT
-from synth import Synth
-
-from exceptions import ImportException
 
 
 class Instrument(object):
+
     def __init__(self, song, index):
         self.song = song
         self.data = song.song_data.instruments[index]
         self.index = index
 
+    def __eq__(self, other):
+        return (isinstance(other, Instrument) and
+                self.name == other.name and
+                self.type == other.type and
+                self.table == other.table and
+                self.automate == other.automate and
+                self.pan == other.pan)
+
     @property
     def name(self):
         """the instrument's name (5 characters, zero-padded)"""
-        return self.song.song_data.instrument_names[self.index]
+        instr_name = self.song.song_data.instrument_names[self.index]
+
+        if type(instr_name) == bytes:
+            instr_name = instr_name.decode('utf-8')
+
+        return instr_name
 
     @name.setter
     def name(self, val):
+        if type(val) != bytes:
+            val = val.encode('utf-8')
+
         self.song.song_data.instrument_names[self.index] = val
 
     @property
     def type(self):
         """the instrument's type (``pulse``, ``wave``, ``kit`` or ``noise``)"""
         return self.data.instrument_type
+
+    @type.setter
+    def type(self, value):
+        self.data.instrument_type = value
 
     @property
     def table(self):
@@ -90,8 +103,8 @@ class Instrument(object):
 
         data_json = json.loads(self.data.as_json())
 
-        for key, value in data_json.items():
-            if key[0] != '_' or key in ('synth_index','table'):
+        for key, value in list(data_json.items()):
+            if key[0] != '_' and key not in ('synth', 'table'):
                 export_struct['data'][key] = value
 
         if self.table is not None:

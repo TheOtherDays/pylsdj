@@ -1,12 +1,15 @@
-from instrument import Instrument
-from instrument_mixins import VibratoMixin
-from exceptions import ImportException
+from .instrument import Instrument
+from .instrument_mixins import VibratoMixin
+from .exceptions import ImportException
 
-import bread_spec
+from . import bread_spec
 
-from synth import Synth
+from .synth import Synth
+
+from .vendor.six.moves import range
 
 class WaveInstrument(Instrument, VibratoMixin):
+
     def __init__(self, song, index):
         super(WaveInstrument, self).__init__(song, index)
 
@@ -72,8 +75,6 @@ class WaveInstrument(Instrument, VibratoMixin):
             if instrument is not None and instrument.type == 'wave':
                 available_synths.discard(instrument.synth.index)
 
-
-
         if len(available_synths) == 0:
             return None
         else:
@@ -100,6 +101,6 @@ class WaveInstrument(Instrument, VibratoMixin):
     def export_struct(self):
         export_struct = super(WaveInstrument, self).export_struct()
 
-        export_struct['synth'] = Synth(self.song, self.synth).export()
+        export_struct['synth'] = Synth(self.song, self.synth.index).export()
 
         return export_struct

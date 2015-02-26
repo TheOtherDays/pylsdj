@@ -1,11 +1,15 @@
-import os, sys, json
+import os
+import sys
+import json
 from nose.tools import assert_equal, assert_list_equal
+from .vendor.six.moves import range
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 
 sys.path.append(os.path.join(SCRIPT_DIR, os.path.pardir))
 
-import blockutils as bl
+from . import blockutils as bl
+
 
 def test_simple_read_write():
     data = [i % 10 for i in range(bl.BLOCK_SIZE * 5 + 17)]
@@ -25,6 +29,7 @@ def test_simple_read_write():
 
     assert_list_equal(data, recovered_data)
 
+
 def test_sample_file():
     reader = bl.BlockReader()
     writer = bl.BlockWriter()
@@ -41,7 +46,7 @@ def test_sample_file():
     # Dummy block for file table header
     factory.new_block()
 
-    for i, key in enumerate(sorted(map(int, song_block_data.keys()))):
+    for i, key in enumerate(sorted(map(int, list(song_block_data.keys())))):
         song_blocks[i + 1] = factory.new_block()
         song_blocks[i + 1].data = bytearray(song_block_data[str(key)])
 
@@ -52,7 +57,6 @@ def test_sample_file():
 
     assembled_from_blocks = reader.read(song_blocks)
     assert_equal(assembled_from_blocks, compressed)
-
 
     factory = bl.BlockFactory()
     factory.new_block()

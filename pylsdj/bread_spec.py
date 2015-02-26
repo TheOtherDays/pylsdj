@@ -1,5 +1,7 @@
 from bread import bread as b
 
+from .vendor.six.moves import range
+
 def padded_hex(pad_count):
     return lambda x: ("0x%%0%dx" % (pad_count)) % (x)
 
@@ -12,7 +14,7 @@ compressed_sav_file = [
     # Each file has a monotonically increasing version number
     ("file_versions", b.array(32, b.byte)),
     b.padding(30 * 8),
-    ("sram_init_check", b.string(2)), # set to 'jk' on init
+    ("sram_init_check", b.string(2)),  # set to 'jk' on init
     # The file that is currently active
     ("active_file", b.byte),
     # Table mapping blocks to files.
@@ -21,7 +23,7 @@ compressed_sav_file = [
 
 # Should be 0x4000 bytes long
 sample_kit = [
-    ("magic_number", b.string(2)), # should be 0x60, 0x40
+    ("magic_number", b.string(2)),  # should be 0x60, 0x40
     # The address of the first byte after each sample, or 0 if the sample is
     # unused
     ("sample_end_addresses", b.array(15, b.string(2))),
@@ -109,7 +111,7 @@ pulse_instrument = [
     ("automate", b.boolean),
     ("automate_2", b.boolean),
     ("vibrato", [
-        ("type",b.enum(2, {
+        ("type", b.enum(2, {
             0: "hf",
             1: "sawtooth",
             2: "sine",
@@ -136,11 +138,7 @@ pulse_instrument = [
         2: "R",
         3: "LR"
     })),
-    b.padding(2 * 8),
-    ("_default_instr_byte_1", b.byte, {"str_format": padded_hex(2)}),
-    b.padding(3 * 8),
-    ("_default_instr_byte_2", b.byte, {"str_format": padded_hex(2)}),
-    b.padding(8)
+    b.padding(8 * 8)
 ]
 
 wave_instrument = [
@@ -158,13 +156,13 @@ wave_instrument = [
     ("automate", b.boolean),
     ("automate_2", b.boolean),
     ("vibrato", [
-        ("type",b.enum(2, {
+        ("type", b.enum(2, {
             0: "hf",
             1: "sawtooth",
             2: "sine",
             3: "square"
         })),
-        ("direction", b.enum(1,{
+        ("direction", b.enum(1, {
             0: "down",
             1: "up"
         }))
@@ -205,13 +203,13 @@ kit_instrument = [
     ("automate", b.boolean),
     ("automate_2", b.boolean),
     ("vibrato", [
-        ("type",b.enum(2, {
+        ("type", b.enum(2, {
             0: "hf",
             1: "sawtooth",
             2: "sine",
             3: "square"
         })),
-        ("direction", b.enum(1,{
+        ("direction", b.enum(1, {
             0: "down",
             1: "up"
         }))
@@ -279,13 +277,13 @@ INSTRUMENT_TYPE_CODE = {
 
 instrument = [
     ("instrument_type", b.enum(
-        8, dict([(v, k) for (k, v) in INSTRUMENT_TYPE_CODE.items()]),
-        default = "invalid")),
+        8, dict([(v, k) for (k, v) in list(INSTRUMENT_TYPE_CODE.items())]),
+        default="invalid")),
     (b.CONDITIONAL, "instrument_type", {
-        "pulse" : pulse_instrument,
-        "wave" : wave_instrument,
-        "kit" : kit_instrument,
-        "noise" : noise_instrument,
+        "pulse": pulse_instrument,
+        "wave": wave_instrument,
+        "kit": kit_instrument,
+        "noise": noise_instrument,
         "invalid": [b.padding(15 * 8)]
     })
 ]
@@ -324,27 +322,31 @@ softsynth = [
     b.padding(8 * 3)
 ]
 
+FX_COMMANDS = {
+    0: '-',
+    1: 'A',
+    2: 'C',
+    3: 'D',
+    4: 'E',
+    5: 'F',
+    6: 'G',
+    7: 'H',
+    8: 'K',
+    9: 'L',
+    10: 'M',
+    11: 'O',
+    12: 'P',
+    13: 'R',
+    14: 'S',
+    15: 'T',
+    16: 'V',
+    17: 'W',
+    18: 'Z'
+}
+
 table_command = [
-    ("fx", b.array(NUM_TABLES, b.array(STEPS_PER_TABLE, b.enum(8, {
-        0: '-',
-        1: 'A',
-        2: 'C',
-        4: 'E',
-        5: 'F',
-        6: 'G',
-        7: 'H',
-        8: 'K',
-        9: 'L',
-        10: 'M',
-        11: 'O',
-        12: 'P',
-        13: 'R',
-        14: 'S',
-        15: 'T',
-        16: 'V',
-        17: 'W',
-        18: 'Z'
-    })))),
+    ("fx", b.array(NUM_TABLES,
+                   b.array(STEPS_PER_TABLE, b.enum(8, FX_COMMANDS)))),
     ("val", b.array(NUM_TABLES, b.array(STEPS_PER_TABLE, b.byte)))
 ]
 
@@ -414,8 +416,22 @@ word_sound = [
     ("length", b.byte)
 ]
 
+# A list which provides the names of all the notes store
+# in a phrase's `notes` field
+NOTES = ['---']
+
+for i in range(0x3, 0x10):
+    NOTES.extend(
+        ['%s%X' % (x.ljust(2, ' '), i) for x in ('C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B')])
+
+NOTES_DICT = {}
+
+for i, note in enumerate(NOTES):
+    NOTES_DICT[i] = note
+
 song = [
-    ("phrase_notes", b.array(NUM_PHRASES, b.array(STEPS_PER_PHRASE, b.byte))),
+    ("phrase_notes", b.array(NUM_PHRASES, b.array(
+        STEPS_PER_PHRASE, b.enum(8, NOTES_DICT)))),
     ("bookmarks", b.array(64, b.byte)),
     b.padding(96 * 8),
     ("grooves", b.array(NUM_GROOVES, b.array(STEPS_PER_GROOVE, b.byte))),
@@ -436,7 +452,8 @@ song = [
     ("chain_transposes", b.array(
         NUM_CHAINS, b.array(PHRASES_PER_CHAIN, b.byte))),
     ("instruments", b.array(NUM_INSTRUMENTS, instrument)),
-    ("table_transposes", b.array(NUM_TABLES, b.array(STEPS_PER_TABLE, b.byte))),
+    ("table_transposes", b.array(
+        NUM_TABLES, b.array(STEPS_PER_TABLE, b.byte))),
     ("table_cmd1", table_command),
     ("table_cmd2", table_command),
     # Set to 'rb' on init
@@ -478,10 +495,13 @@ song = [
     ("file_changed", b.byte),
     ("power_save", b.byte),
     ("prelisten", b.byte),
-    ("wave_synth_overwrite_lock", b.array(2, b.byte)),
+    # One overwrite lock per synth, true if the wave overwrites the synth's
+    # parameters; stored in reverse order (synth f .. 0)
+    ("wave_synth_overwrite_locks", b.array(NUM_SYNTHS, b.boolean)),
     b.padding(8 * 58),
     # Beginning of bank 2
-    ("phrase_fx", b.array(NUM_PHRASES, b.array(STEPS_PER_PHRASE, b.byte))),
+    ("phrase_fx", b.array(NUM_PHRASES, b.array(
+        STEPS_PER_PHRASE, b.enum(8, FX_COMMANDS)))),
     ("phrase_fx_val", b.array(NUM_PHRASES, b.array(STEPS_PER_PHRASE, b.byte))),
     b.padding(32 * 8),
     # Beginning of bank 3

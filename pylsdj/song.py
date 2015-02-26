@@ -1,31 +1,29 @@
-import json
+from .utils import assert_index_sane
+from . import bread_spec
 
-from utils import assert_index_sane
-from bread import bread
-import bread_spec
+from .synth import Synth
+from .table import Table
+from .phrase import Phrase
+from .chain import Chain
+from .speech_instrument import SpeechInstrument
 
-from synth import Synth
-from table import Table
-from phrase import Phrase
-from chain import Chain
-from speech_instrument import SpeechInstrument
+from .instruments import Instruments
 
-from wave_instrument import WaveInstrument
-from pulse_instrument import PulseInstrument
-from kit_instrument import KitInstrument
-from noise_instrument import NoiseInstrument
+from .bread_spec import INSTRUMENT_TYPE_CODE
+from .filepack import DEFAULT_INSTRUMENT
 
-from bread_spec import INSTRUMENT_TYPE_CODE
-from filepack import DEFAULT_INSTRUMENT
+from .clock import Clock, TotalClock
 
-from clock import Clock, TotalClock
+from .exceptions import ImportException
 
-import io
+from .vendor.six.moves import range
 
 # Number of channels
 NUM_CHANNELS = 4
 
+
 class AllocTable(object):
+
     def __init__(self, song, alloc_table, object_class):
         self.alloc_table = alloc_table
 
@@ -64,114 +62,8 @@ class AllocTable(object):
                 return i
         return None
 
-class Instruments(object):
-    specs = {
-        "pulse": bread_spec.pulse_instrument,
-        "wave": bread_spec.wave_instrument,
-        "kit": bread_spec.kit_instrument,
-        "noise": bread_spec.noise_instrument
-    }
-
-    instrumentClasses = {
-        "pulse": PulseInstrument,
-        "wave": WaveInstrument,
-        "kit": KitInstrument,
-        "noise": NoiseInstrument
-    }
-
-    def __init__(self, song):
-        self.song = song
-        self.alloc_table = song.song_data.instr_alloc_table
-        self.access_objects = []
-
-        for index in range(len(self.alloc_table)):
-            instr_type = self.song.song_data.instruments[index].instrument_type
-
-            self.access_objects.append(
-                self.instrumentClasses[instr_type](song, index))
-
-    def _new_default_instrument(self, instr_type):
-        instr_data = DEFAULT_INSTRUMENT[:]
-        instr_data[0] = INSTRUMENT_TYPE_CODE[instr_type]
-        return bread.parse(instr_data, bread_spec.instrument)
-
-    def _set_instrument_type(self, index, instrument_type):
-        assert instrument_type in Instruments.specs, (
-            "Invalid instrument type '%s'" % (instrument_type))
-
-        assert_index_sane(index, len(self.song.song_data.instruments))
-
-        current_access_object = self.access_objects[index]
-
-        # If this instrument is of a different type than we're currently
-        # storing, we've got to make a new one of the appropriate type into
-        # which to demarshal
-        if (current_access_object is None or
-            current_access_object.type != instrument_type):
-            self.access_objects[index] = (
-                self.instrumentClasses[instrument_type](self.song, index))
-            self.access_objects[index].data = self._new_default_instrument(
-                instrument_type)
-            self.song.song_data.instruments[index] = (
-                self.access_objects[index].data)
-
-    def __getitem__(self, index):
-        assert_index_sane(index, len(self.alloc_table))
-
-        if not self.alloc_table[index]:
-            return None
-
-        return self.access_objects[index]
-
-    def as_list(self):
-        return self.access_objects
-
-    def allocate(self, index, instrument_type):
-        self.alloc_table[index] = True
-        self._set_instrument_type(index, instrument_type)
-
-    def import_from_file(self, index, filename):
-        """Import this instrument's settings from the given file. Will
-        automatically add the instrument's synth and table to the song's
-        synths and tables if needed.
-
-        Note that this may invalidate existing instrument accessor objects.
-
-        :param index: the index into which to import
-
-        :param filename: the file from which to load
-
-        :raises ImportException: if importing failed, usually because the song
-          doesn't have enough synth or table slots left for the instrument's
-          synth or table
-        """
-
-        with open(filename, 'r') as fp:
-            self._import_from_struct(index, json.load(fp))
-
-    def _import_from_struct(self, index, lsdinst_struct):
-        instr_type = lsdinst_struct['data']['instrument_type']
-
-        self.allocate(index, instr_type)
-
-        instrument = self.song.instruments[index]
-        instrument.name = lsdinst_struct['name']
-
-        # Make sure we've got enough room for the table if we need it
-        if 'table' in lsdinst_struct:
-            table_index = self.song.tables.next_free()
-
-            if table_index is None:
-                raise ImportException(
-                    "No available table slot in which to store the "
-                    "instrument's table data")
-
-            self.song.tables.allocate(table_index)
-            instrument.table = self.song.tables[table_index]
-
-        instrument.import_lsdinst(lsdinst_struct)
-
 class Grooves(object):
+
     def __init__(self, song):
         self.song = song
 
@@ -179,6 +71,7 @@ class Grooves(object):
         assert_index_sane(index, len(self.song.song_data.grooves))
 
         return self.song.song_data.grooves[index]
+
 
 class Sequence(object):
     PU1 = "pu1"
@@ -197,7 +90,10 @@ class Sequence(object):
 
         chain_objs = {}
 
-        for channel in [Sequence.PU1, Sequence.PU2, Sequence.WAV, Sequence.NOI]:
+        for channel in [Sequence.PU1,
+                        Sequence.PU2,
+                        Sequence.WAV,
+                        Sequence.NOI]:
             chain_number = getattr(raw_chain, channel)
 
             if chain_number != Sequence.NO_CHAIN:
@@ -227,26 +123,30 @@ class Sequence(object):
             setattr(self.song.song_data.song[index], channel, chain_number)
 
     def __str__(self):
-        output_str = StringIO.StringIO()
+        output_str = ''
 
-        print >>output_str, "   PU1 PU2 WAV NOI"
+        def add_line(line):
+            output_str += line + '\n'
+
+
+        add_line("   PU1 PU2 WAV NOI")
 
         for i, row in enumerate(self.song.song_data.song):
-            print >>output_str, "%02x" % (i),
+            add_line("%02x" % (i), end=' ')
 
             for channel in ["pu1", "pu2", "wav", "noi"]:
                 chain_number = getattr(row, channel)
 
                 if chain_number == Sequence.NO_CHAIN:
-                    print >>output_str, " --",
+                    add_line(" --", end=' ')
                 else:
-                    print >>output_str, " %02x" % (getattr(row, channel)),
-            print >>output_str, ""
+                    add_line(" %02x" % (getattr(row, channel)), end=' ')
+            add_line("")
 
-        string = output_str.getvalue()
-        return string
+        return output_str
 
 class Synths(object):
+
     def __init__(self, song):
         self.song = song
         self.access_objects = []
@@ -264,8 +164,10 @@ class Synths(object):
 
 
 class Song(object):
+
     """A song consists of a sequence of chains, one per channel.
     """
+
     def __init__(self, song_data):
         # Check checksums
         assert song_data.mem_init_flag_1 == b'rb'
@@ -285,33 +187,26 @@ class Song(object):
 
         # Stitch together allocated tables
         self._tables = AllocTable(
-            song = self,
-            alloc_table = self.song_data.table_alloc_table,
-            object_class = Table)
+            song=self,
+            alloc_table=self.song_data.table_alloc_table,
+            object_class=Table)
 
         # Stitch together allocated phrases
         self._phrases = AllocTable(
-            song = self,
-            alloc_table = self.song_data.phrase_alloc_table,
-            object_class = Phrase)
+            song=self,
+            alloc_table=self.song_data.phrase_alloc_table,
+            object_class=Phrase)
 
         # Stitch together allocated chains
         self._chains = AllocTable(
-            song = self,
-            alloc_table = self.song_data.chain_alloc_table,
-            object_class = Chain)
+            song=self,
+            alloc_table=self.song_data.chain_alloc_table,
+            object_class=Chain)
 
         self._sequence = Sequence(self)
 
     def __str__(self):
-        output_str = StringIO.StringIO()
-
-        print >>output_str, str(self.sequence)
-
-        string = output_str.getvalue()
-        output_str.close()
-
-        return string
+        return str(self.sequence)
 
     @property
     def instruments(self):
@@ -396,7 +291,7 @@ for field, doc in [("tempo", "the song's tempo"),
                    ("prelisten", "if non-zero, play notes and instruments "
                     "while entering them"),
                    ("bookmarks", "list of screen bookmarks"),
-                   ("wave_synth_overwrite_lock", None)]:
+                   ("wave_synth_overwrite_locks", None)]:
     def field_getter(this):
         return getattr(this.song_data, field)
 

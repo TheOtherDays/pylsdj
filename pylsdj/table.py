@@ -1,8 +1,8 @@
-import json
-from utils import add_song_data_property
-from bread_spec import STEPS_PER_TABLE
+from .bread_spec import STEPS_PER_TABLE
+from .vendor.six.moves import range
 
 class TableFX(object):
+
     def __init__(self, params, table_index, fx_index):
         self._params = params
         self._table_index = table_index
@@ -26,10 +26,14 @@ class TableFX(object):
     def value(self, val):
         self._params.val[self._table_index][self._fx_index] = val
 
+    def __eq__(self, other):
+        return hasattr(other, '_params') and self._params == other._params
 
 class Table(object):
+
     """Each table is a sequence of transposes, commands, and amplitude
     changes that can be applied to any channel."""
+
     def __init__(self, song, index):
         self._song = song
         self._index = index
@@ -38,6 +42,9 @@ class Table(object):
                      for i in range(STEPS_PER_TABLE)]
         self._fx2 = [TableFX(self._song.song_data.table_cmd2, self._index, i)
                      for i in range(STEPS_PER_TABLE)]
+
+    def __eq__(self, other):
+        return self._fx1 == other._fx1 and self._fx2 == other._fx2
 
     @property
     def song(self):
